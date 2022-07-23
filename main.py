@@ -36,6 +36,7 @@ def register():
 
 
 def login():
+    global user
     name = input("Username: ") 
     with open("accounts.txt", "r") as accfile:
         for line in accfile.readlines():
@@ -48,13 +49,18 @@ def login():
             print("Username not found.\n")
             return False
         password = getpass()
-        new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-        if key[32:] != new_key:
-            print("Invalid Password! Get out.\n")
-            return False
+        for _ in range(3):
+            new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 100000)
+            if line[32:] != new_key:
+                password = getpass("Invalid Password!\nTry Again: ")
+            else:
+                user = name
+                return True
         else:
-            user = name
-            return True
+            print("Invalid Password! Get out.\n"+"+"*30)
+            return False
+
+            
 
 
 def deletehistory():
