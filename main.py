@@ -37,7 +37,6 @@ def login():
     name = input("Username: ") 
     with open("accounts.txt", "r") as accfile:
         for line in accfile.readlines():
-            print(line)
             if name in line[:32]:
                 key = line[32:]
                 break
@@ -64,8 +63,8 @@ def deletehistory():
 def accountlist():
     with open("accounts.txt", "r") as accfile:
         print("List of registered accounts:")
-        while accfile.readline():
-            print(f"{accfile.readline()[:32]}")
+        for line in accfile.readlines():
+            print(f"{line[:32]}")
 
 def logout():
     if user == None:
@@ -75,15 +74,14 @@ def logout():
 
 
 def exit():
+    global run
     run = False
+
 
 menu = ["exit", "login", "register", "accoutlist"]
 user_menu = ["exit", "logout", "compose", "accoutlist", "deletehistory"]
 user = None
 run = True 
-
-accountlist()
-    
 
 
 while run == True:
@@ -93,10 +91,8 @@ while run == True:
         print(f"User: {user}")
         print(*user_menu)
     command = input("Type Your Command: ")
-    command = f"{str(command)}()"
-    # print(command)
     try:
-        eval(command)
+        eval(f"{str(command)}()")
     except:
-        print(f"{command[:-2]} is not a valid command.")
+        print(f"{command} is not a valid command.")
     
