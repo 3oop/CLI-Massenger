@@ -28,7 +28,7 @@ def register():
                 password = getpass("Enter a password: ")
                 password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
     with open("accounts.txt", "a") as accfile:
-        accfile.write(f"{name.ljust(32)},{password}\n")
+        accfile.write(f"{name.ljust(32)}{password}\n")
         print(f"{name} registered.")
         return True
 
@@ -37,21 +37,24 @@ def login():
     name = input("Username: ") 
     with open("accounts.txt", "r") as accfile:
         for line in accfile.readlines():
-            if name in line[32]:
-                password = getpass()
-                new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-                if line[32:] != new_key:
-                    print("Invalid Password! Get out.\n"+"+"*30)
-                    return False
-                else:
-                    user = name
-                    return True
-            else:
-                print("Username not found")
-                return False
+            print(line)
+            if name in line[:32]:
+                key = line[32:]
+                break
+        else:
+            print("Username not found")
+            return False
+        password = getpass()
+        new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
+        if key[32:] != new_key:
+            print("Invalid Password! Get out.\n"+"+"*30)
+            return False
+        else:
+            user = name
+            return True
 
 
-def del_history():
+def deletehistory():
     if user == None:
         print("No User is Logged in")
         return False
@@ -72,10 +75,10 @@ def logout():
 
 
 def exit():
-    run == False
+    run = False
 
 menu = ["exit", "login", "register", "accoutlist"]
-user_menu = ["exit", "logout", "compose", "accoutlist"]
+user_menu = ["exit", "logout", "compose", "accoutlist", "deletehistory"]
 user = None
 run = True 
 
@@ -88,6 +91,7 @@ while run == True:
         print(*menu, sep='\n')
     else:
         print(f"User: {user}")
+        print(*user_menu)
     command = input("Type Your Command: ")
     command = f"{str(command)}()"
     # print(command)
