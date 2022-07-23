@@ -57,8 +57,13 @@ def login():
                 user = name
                 return True
         else:
-            print("Invalid Password! Get out.\n"+"+"*30)
-            return False
+            new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 100000)
+            if line[32:] != new_key:
+                print("Invalid Password! Get out.\n"+"+"*30)
+                return False
+            else:
+                user = name
+                return True
 
             
 
