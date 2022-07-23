@@ -17,20 +17,20 @@ with open("accounts.txt", "a") as accfile:
 def register():
     name = input("Username: ").strip()
     if ' ' in name:
-        print("Username Invalid")
+        print("Username Invalid.\n")
         return False
     with open("accounts.txt", "r") as accfile:
         if accfile.read != '':
             for line in accfile.readlines():
                 if name in line:
-                    print("Username Taken")
+                    print("Username Taken.\n")
                     return False
             else:
                 password = getpass("Enter a password: ")
                 password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
     with open("accounts.txt", "a") as accfile:
         accfile.write(f"{name.ljust(32)}{password}\n")
-        print(f"{name} registered.")
+        print(f"{name} registered.\n")
         return True
 
 
@@ -42,12 +42,12 @@ def login():
                 key = line[32:]
                 break
         else:
-            print("Username not found")
+            print("Username not found.\n")
             return False
         password = getpass()
         new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
         if key[32:] != new_key:
-            print("Invalid Password! Get out.\n"+"+"*30)
+            print("Invalid Password! Get out.\n")
             return False
         else:
             user = name
@@ -56,9 +56,9 @@ def login():
 
 def deletehistory():
     if user == None:
-        print("No User is Logged in")
+        print("No User is Logged in.\n")
         return False
-    with open(f"{user}.text", "w") as accfile:
+    with open(f"messages.txt", "w") as accfile:
         accfile.flush()
 
 def accountlist():
@@ -70,7 +70,7 @@ def accountlist():
 def logout():
     global user
     if user == None:
-        print("No user is logged, Please Log in")
+        print("No user is logged, Please Log in.\n")
     else:
         user = None
 
@@ -98,4 +98,4 @@ while run == True:
     try:
         eval(f"{str(command)}()")
     except:
-        print(f"{command} is not a valid command.")
+        print(f"{command} is not a valid command.\n")
