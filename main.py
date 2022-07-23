@@ -16,7 +16,7 @@ with open("accounts.txt", "a") as accfile:
 
 
 def register():
-    name = input("Username: ").strip()
+    name = input("Username  (Max Len. 32): )").strip()
     if ' ' in name:
         print("Username Invalid.\n")
         return False
@@ -39,7 +39,9 @@ def login():
     name = input("Username: ") 
     with open("accounts.txt", "r") as accfile:
         for line in accfile.readlines():
-            if name in line[:32]:
+            # print(name)
+            # print(line[:32].strip())
+            if name == line[:32].strip():
                 key = line[32:]
                 break
         else:
@@ -67,6 +69,7 @@ def accountlist():
         print("List of registered accounts:")
         for line in accfile.readlines():
             print(f"{line[:32]}")
+    print("\n")
 
 def logout():
     global user
