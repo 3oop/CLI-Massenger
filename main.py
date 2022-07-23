@@ -5,10 +5,16 @@ salt = os.urandom(32)
 from hashlib import pbkdf2_hmac
 from getpass import getpass
 
-user = None
 
-def register(name):
-    name = str(name).strip()
+with open("messages.txt", "a") as msgfile:
+    pass
+
+with open("accounts.txt", "a") as accfile:
+    pass
+
+
+def register():
+    name = input("Username: ").strip()
     if ' ' in name:
         print("Username Invalid")
         return False
@@ -20,29 +26,26 @@ def register(name):
                     return False
             else:
                 password = getpass("Enter a password: ")
-                password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 100000)
+                password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
     with open("accounts.txt", "a") as accfile:
-        accfile.write(f"{name.ljust(32)},{password}")
+        accfile.write(f"{name.ljust(32)},{password}\n")
         print(f"{name} registered.")
         return True
 
 
-def login(name):
+def login():
+    name = input("Username: ") 
     with open("accounts.txt", "r") as accfile:
         for line in accfile.readlines():
             if name in line[32]:
                 password = getpass()
-                for _ in range(3):
-                    new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 100000)
-                    if line[32:] != new_key:
-                        password = getpass("Invalid Password!\nTry Again: ")
-                    else:
-                        break
-                else:
+                new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
+                if line[32:] != new_key:
                     print("Invalid Password! Get out.\n"+"+"*30)
                     return False
-                user = name
-                return True
+                else:
+                    user = name
+                    return True
             else:
                 print("Username not found")
                 return False
@@ -56,10 +59,17 @@ def del_history():
         accfile.flush()
 
 def acc_list():
-    print()
+    with open("accounts.txt", "r") as accfile:
+        print("List of registered accounts:")
+        while accfile.readline():
+            print(f"{accfile.readline()[:32]}")
 
 def logout():
-    user = None
+    if user == None:
+        print("No user is logged, Please Log in")
+    else:
+        user = None
+
 
 def exit():
     run == False
@@ -77,18 +87,20 @@ user_menu = []
 user = None
 run = True 
 
-def main():
-    while run == True:
-        if user == None:
-            print(*[f"{i} : {menu[i][1]}" for i in ['0', '1', '2'] ], sep='\n')
-        else:
-            print(*[f"{i} : {menu[i][1]}" for i in ['3', '4'] ], sep='\n')
-            with open(f"{user}.txt", 'r') as accfile:
-                eval(f"user_name = {accfile.readline()}")
-            print("Chats:")
-            print(*[f"{i}" for i in user_menu])
-            
+acc_list()
+    
 
 
-if __name__ == "__main__":
-    main()
+while run == True:
+    if user == None:
+        print(*[f"{i} : {menu[i][1]}" for i in ['0', '1', '2'] ], sep='\n')
+    else:
+        print(f"User: {user}")
+    command = input("Type Your Command: ")
+    command = f"{str(command)}()"
+    # print(command)
+    try:
+        eval(command)
+    except:
+        print(f"{command[:-2]} is not a valid command.")
+    
