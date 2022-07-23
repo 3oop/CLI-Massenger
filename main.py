@@ -58,7 +58,7 @@ def del_history():
     with open(f"{user}.text", "w") as accfile:
         accfile.flush()
 
-def acc_list():
+def accountlist():
     with open("accounts.txt", "r") as accfile:
         print("List of registered accounts:")
         while accfile.readline():
@@ -74,26 +74,18 @@ def logout():
 def exit():
     run == False
 
-menu = {
-    '0': [exit , "Exit"],
-    '1': [login , "Login"],
-    '2': [register, "Register"],
-    '3': [logout, "Log out"],
-    '4': [del_history, "Delete History"],
-    '5': [acc_list, "Account List"]
-}
-
-user_menu = []
+menu = ["exit", "login", "register", "accoutlist"]
+user_menu = ["exit", "logout", "compose", "accoutlist"]
 user = None
 run = True 
 
-acc_list()
+accountlist()
     
 
 
 while run == True:
     if user == None:
-        print(*[f"{i} : {menu[i][1]}" for i in ['0', '1', '2'] ], sep='\n')
+        print(*menu, sep='\n')
     else:
         print(f"User: {user}")
     command = input("Type Your Command: ")
