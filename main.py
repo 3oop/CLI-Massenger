@@ -1,5 +1,6 @@
 # an Open Source CLI Massenger
 import os
+from datetime import datetime
 
 salt = os.urandom(32)
 from hashlib import pbkdf2_hmac
@@ -75,7 +76,18 @@ def logout():
         user = None
 
 def compose():
-    pass
+    global user
+    if user == None:
+        print("a user must be Logged in.\n")
+        return False
+    txt = input("Type your message:\n")
+    reciver = input("To who?\n")
+    t = datetime.now()
+    msg = f"{user} to {reciver},{t},{txt}\n"
+    with open("messages.txt", "a") as msgfile:
+        msgfile.write(msg)
+
+
 
 def exit():
     global run
