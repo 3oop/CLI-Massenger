@@ -6,6 +6,7 @@ from hashlib import pbkdf2_hmac
 from getpass import getpass
 
 
+# creating files
 with open("messages.txt", "a") as msgfile:
     pass
 
@@ -67,11 +68,14 @@ def accountlist():
             print(f"{line[:32]}")
 
 def logout():
+    global user
     if user == None:
         print("No user is logged, Please Log in")
     else:
         user = None
 
+def compose():
+    pass
 
 def exit():
     global run
@@ -89,10 +93,9 @@ while run == True:
         print(*menu, sep='\n')
     else:
         print(f"User: {user}")
-        print(*user_menu)
+        print(*user_menu, sep="\n")
     command = input("Type Your Command: ")
     try:
         eval(f"{str(command)}()")
     except:
         print(f"{command} is not a valid command.")
-    
