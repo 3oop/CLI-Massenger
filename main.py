@@ -14,6 +14,12 @@ try:
 except FileExistsError:
     pass
 
+try:
+    with open("accounts.txt", "a") as accfile:
+        pass
+except FileNotFoundError:
+    with open("accounts.txt", "w") as accfile:
+        pass
 
 def register():
     username = input("Username  (Max Len. 32): ").strip()
@@ -27,8 +33,7 @@ def register():
     except FileNotFoundError:
         password = getpass("Enter a password: ")
         password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-        acc = {'Username': username, 'Password': str(password), 'Chats': None}
-        # print(type(password))
+        acc = {"Username": username, "Password": str(password), "Chats": None}
         with open(f"accounts/{username}.json", "w") as accfile:
             json.dump(acc, accfile)
             print(f"{username} registered.\n")
@@ -46,15 +51,17 @@ def login():
         return False
     password = getpass()
     for _ in range(3):
-        new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 100000)
-        if acc["Password"][32:] != new_key:
+        new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
+        print(bytes(acc["Password"]))
+        print(new_key)
+        if acc["Password"][104:] != str(new_key)[2:]:
             password = getpass("Invalid Password!\nTry Again: ")
         else:
             user = username
             return True
     else:
-        new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 100000)
-        if acc["Password"][32:] != new_key:
+        new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
+        if acc["Password"][32:] != str(new_key):
             print("Invalid Password! Get out.\n"+"+"*30)
             return False
         else:
