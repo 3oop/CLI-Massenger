@@ -26,42 +26,50 @@ def register():
     if ' ' in username:
         print("Username Invalid.\n")
         return False
-    try:
-        with open(f"accounts/{username}.json", "r") as accfile:
-            print("Username Taken.\n")
-            return False
-    except FileNotFoundError:
-        password = getpass("Enter a password: ")
-        password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-        acc = {"Username": username, "Password": str(password), "Chats": None}
-        with open(f"accounts/{username}.json", "w") as accfile:
-            json.dump(acc, accfile)
-            print(f"{username} registered.\n")
-            return True
+    with open("accounts.txt", "r") as accfile:
+        if accfile.read != '':
+            for line in accfile.readlines():
+                if username == line[:32].strip():
+                    print("Username Taken.\n")
+                    return False
+            else:
+                password = getpass("Enter a password: ")
+                password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
+    with open("accounts.txt", "a") as accfile:
+        accfile.write(f"{username.ljust(32)}{password}\n")
+        print(f"{username} registered.\n")
+        return True
+
 
 
 def login():
     global user
     username = input("Username: ") 
-    try:
-        with open(f"accounts/{username}.json", "r") as accfile:
-            acc = json.loads(accfile.read())   
-    except FileNotFoundError:
-        print("Username not found.\n")
-        return False
+    with open("accounts.txt", "r") as accfile:
+        for line in accfile.readlines():
+            if username == line[:32].strip():
+                salt = line[34:66]
+                key = line[32:]
+                break
+        else:
+            print("Username not found.\n")
+            return False
     password = getpass()
+    print(type(password))
     for _ in range(3):
+        salt = bytes(salt)
         new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-        print(bytes(acc["Password"]))
+        print(key)
+        print(salt)
         print(new_key)
-        if acc["Password"][104:] != str(new_key)[2:]:
+        if key[32:] != new_key:
             password = getpass("Invalid Password!\nTry Again: ")
         else:
             user = username
             return True
     else:
         new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-        if acc["Password"][32:] != str(new_key):
+        if key[32:] != new_key:
             print("Invalid Password! Get out.\n"+"+"*30)
             return False
         else:
