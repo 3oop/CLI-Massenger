@@ -1,12 +1,15 @@
 # an Open Source CLI Massenger
 import os
-import json
 from datetime import datetime
 
-salt = os.urandom(32)
+from numpy import rec
+
+# salt = os.urandom(32)
+salt = bytes("salt", 'utf_8')
 from hashlib import pbkdf2_hmac
 from getpass import getpass
 
+import json
 
 # creating files
 try:
@@ -14,75 +17,51 @@ try:
 except FileExistsError:
     pass
 
-try:
-    with open("accounts.txt", "a") as accfile:
-        pass
-except FileNotFoundError:
-    with open("accounts.txt", "w") as accfile:
-        pass
 
 def register():
     username = input("Username  (Max Len. 32): ").strip()
-    if ' ' in username:
+    if ' ' in username or username == ' ':
         print("Username Invalid.\n")
         return False
-    with open("accounts.txt", "r") as accfile:
-        if accfile.read != '':
-            for line in accfile.readlines():
-                if username == line[:32].strip():
-                    print("Username Taken.\n")
-                    return False
-            else:
-                password = getpass("Enter a password: ")
-                password = salt + pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-    with open("accounts.txt", "a") as accfile:
-        accfile.write(f"{username.ljust(32)}{password}\n")
-        print(f"{username} registered.\n")
-        return True
-
+    try:
+        with open(f"accounts/{username}.json", "r") as accfile:
+            print("Username Taken.\n")
+            return False
+    except FileNotFoundError:
+        password = getpass("Enter a password: ")
+        password = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
+        acc = {'Username': username, 'Password': str(password), 'Chats': []}
+        with open(f"accounts/{username}.json", "w") as accfile:
+            json.dump(acc, accfile)
+            print(f"{username} registered.\n")
+            return True
 
 
 def login():
     global user
     username = input("Username: ") 
-    with open("accounts.txt", "r") as accfile:
-        for line in accfile.readlines():
-            if username == line[:32].strip():
-                salt = line[34:66]
-                key = line[32:]
-                break
-        else:
-            print("Username not found.\n")
-            return False
+    try:
+        with open(f"accounts/{username}.json", "r") as accfile:
+            acc = json.loads(accfile.read())   
+    except FileNotFoundError:
+        print("Username not found.\n")
+        return False
     password = getpass()
-    print(type(password))
     for _ in range(3):
-        salt = bytes(salt)
         new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-        print(key)
-        print(salt)
-        print(new_key)
-        if key[32:] != new_key:
+        if acc["Password"] != str(new_key):
             password = getpass("Invalid Password!\nTry Again: ")
         else:
             user = username
             return True
     else:
         new_key = pbkdf2_hmac('sha256', password.encode('utf_8'), salt, 9999)
-        if key[32:] != new_key:
+        if acc["Password"][32:] != new_key:
             print("Invalid Password! Get out.\n"+"+"*30)
             return False
         else:
             user = username
             return True 
-
-
-# def deletehistory():
-#     if user == None:
-#         print("No User is Logged in.\n")
-#         return False
-#     with open(f"messages.txt", "w") as accfile:
-#         accfile.flush()
 
 
 def accountlist():
@@ -105,12 +84,21 @@ def compose():
     if user == None:
         print("a user must be Logged in.\n")
         return False
-    txt = input("Type your message:\n")
     reciver = input("To who?\n")
+    txt = input("Type your message:\n")
     t = datetime.now()
-    msg = {"Sender": user, "to": reciver, "Time": t, "Body": txt} 
-    with open(f"account/{user}.json", "w") as msgfile:
-        json.dump(msg, msgfile)
+    seen = False
+    try:
+        with open(f"{user} {reciver}.json", "a") as msgfile:
+            chat = json.loads(msgfile)
+            print(type(chat))
+            chat.append({"reciver": reciver, "txt" : txt, "t": t, "seen": seen})
+    except FileNotFoundError:
+        with open(f"{reciver} {user}.json", "a") as msgfile:
+            chat = json.loads(msgfile)
+            print(type(chat))
+            chat.append({"reciver": reciver, "txt" : txt, "t": t, "seen": seen})
+    print("Message Saved.\n")
 
 
 
@@ -120,7 +108,7 @@ def exit():
 
 
 menu = ["exit", "login", "register", "accoutlist"]
-user_menu = ["exit", "logout", "compose", "accoutlist", "deletehistory"]
+user_menu = ["exit", "logout", "compose", "chatlist"]
 user = None
 run = True 
 
@@ -129,10 +117,16 @@ while run == True:
     if user == None:
         print(*menu, sep='\n')
     else:
-        print(f"User: {user}")
+        with open(f"accounts/{user}.json", "r") as accfile:
+            acc = json.loads(accfile.read())
+        print(f"\nUser : {user}\n")
+        print(f"Chatlist : ")
+        for c in acc["Chats"]:
+            print(c)
+        print('\n')
         print(*user_menu, sep="\n")
     command = input("Type Your Command: ")
-    # try:
-    eval(f"{str(command)}()")
-    # except:
-        # print(f"{str(command)} is not a valid command.\n")
+    try:
+        eval(f"{str(command)}()")
+    except:
+        print(f"{command} is not a valid command.\n")
