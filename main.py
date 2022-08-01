@@ -1,6 +1,7 @@
 # an Open Source CLI Massenger
 import os
 from datetime import datetime
+from tokenize import Name
 
 from numpy import rec
 
@@ -16,6 +17,12 @@ try:
     os.mkdir("accounts/")
 except FileExistsError:
     pass
+
+try:
+    os.mkdir("chats/")
+except FileExistsError:
+    pass
+
 
 
 def register():
@@ -85,21 +92,68 @@ def compose():
         print("a user must be Logged in.\n")
         return False
     reciver = input("To who?\n")
-    txt = input("Type your message:\n")
-    t = datetime.now()
-    seen = False
     try:
-        with open(f"{user} {reciver}.json", "a") as msgfile:
-            chat = json.loads(msgfile)
-            print(type(chat))
-            chat.append({"reciver": reciver, "txt" : txt, "t": t, "seen": seen})
+        with open(f"accounts/{reciver}.json", "r") as accfile:
+            pass
     except FileNotFoundError:
-        with open(f"{reciver} {user}.json", "a") as msgfile:
-            chat = json.loads(msgfile)
-            print(type(chat))
-            chat.append({"reciver": reciver, "txt" : txt, "t": t, "seen": seen})
+        print(f"{reciver} is not a registered user.\n")
+        return False
+    txt = input("Type your message:\n")
+    t = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    seen = False
+    for chat in os.listdir("chats/"):
+        if chat == f"{user} {reciver}.json" or chat == f"{reciver} {user}.json":
+            chatpath = chat
+            break
+    else:
+        chatpath = f"{user} {reciver}.json"
+        with open(f"chats/{chatpath}", 'w') as chatfile:
+            first_msg = {"sender": "system", "txt" : "This Chat has begun", "t": datetime.now().strftime("%Y/%m/%d %H:%M:%S"), "seen": True}
+            x = json.dumps(first_msg)
+            chatfile.write(x)
+
+    with open(f"chats/{chatpath}", "a") as chatfile:
+        msg = {"sender": user, "txt" : txt, "t": t, "seen": seen}
+        x = json.dumps(msg)
+        chatfile.write('\n'+x)
+
+    with open(f"accounts/{user}.json", "r") as accfile:
+        acc = json.loads(accfile.read())
+    if chatpath not in acc["Chats"]:
+        acc["Chats"].append(chatpath)
+    with open(f"accounts/{user}.json", "w") as accfile:
+        x = json.dumps(acc)
+        accfile.write(x)
+
+    with open(f"accounts/{reciver}.json", "r") as accfile:
+        acc = json.loads(accfile.read())
+    if chatpath not in acc["Chats"]:
+        acc["Chats"].append(chatpath)
+    with open(f"accounts/{reciver}.json", "w") as accfile:
+        accfile.write(x)
     print("Message Saved.\n")
 
+
+def viewchat():
+    chatpath = input("Choose from Chatlist: ").strip() + ".json"
+    with open(f"chats/{chatpath}", 'r+') as chatfile:
+        pos = 0
+        for l in chatfile.readlines():
+            pos += len(l)+1
+            x = json.loads(l)
+            t = x['t']
+            sen = x["sender"]
+            txt = x["txt"]
+            print(f"{t} {sen}: {txt}")
+            if x["sender"] != user and x["seen"] == False:
+                x["seen"] = True
+                chatfile.seek(pos, 0)
+                chatfile.write(len(l)*' ')
+                chatfile.seek(pos, 0)
+                y = json.dumps(x)
+                chatfile.write(y)
+    if input("Press Enter.."):
+        return True
 
 
 def exit():
@@ -108,7 +162,7 @@ def exit():
 
 
 menu = ["exit", "login", "register", "accoutlist"]
-user_menu = ["exit", "logout", "compose", "chatlist"]
+user_menu = ["exit", "logout", "compose", "viewchat"]
 user = None
 run = True 
 
@@ -120,13 +174,21 @@ while run == True:
         with open(f"accounts/{user}.json", "r") as accfile:
             acc = json.loads(accfile.read())
         print(f"\nUser : {user}\n")
-        print(f"Chatlist : ")
+        print(f"Chatlist : (* means you have unread messages.)")
         for c in acc["Chats"]:
-            print(c)
+            with open(f"chats/{c}", "r") as chatfile:
+                for l in chatfile.readlines():
+                    x = json.loads(l)
+                    if x["seen"] == False and x["sender"] != user:
+                        s = '*'
+                        break
+                    else:
+                        s = ''
+            print(c[:-5], s)
         print('\n')
         print(*user_menu, sep="\n")
     command = input("Type Your Command: ")
     try:
         eval(f"{str(command)}()")
-    except:
+    except (NameError, TypeError):
         print(f"{command} is not a valid command.\n")
